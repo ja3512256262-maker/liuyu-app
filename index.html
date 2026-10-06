@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f7f6f2" />
+    <meta name="description" content="以保护现金流为核心的大学生个人财务管理系统。" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="留余" />
+    <title>留余 · 个人财务管家</title>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#top" aria-label="留余首页">
+          <span class="brand-mark" aria-hidden="true">留</span>
+          <span>
+            <strong>留余</strong>
+            <small>个人财务管家</small>
+          </span>
+        </a>
+        <button id="settings-button" class="icon-button" type="button" aria-label="打开设置">
+          <span aria-hidden="true">⚙</span>
+        </button>
+      </header>
+
+      <main id="top">
+        <section class="welcome-row" aria-labelledby="page-title">
+          <div>
+            <p class="eyebrow" id="today-eyebrow">—</p>
+            <h1 id="page-title">今天也先照顾好现金流。</h1>
+          </div>
+          <span class="status-chip"><span class="status-dot"></span>状态良好</span>
+        </section>
+
+        <section class="balance-card" aria-labelledby="balance-title">
+          <div class="balance-heading">
+            <div>
+              <p class="label" id="balance-title">本月剩余</p>
+              <p class="balance-amount"><span>¥</span>1,236</p>
+            </div>
+            <div class="month-badge" id="month-badge">—</div>
+          </div>
+          <div class="progress-meta">
+            <span>已支出 ¥264</span>
+            <span>预算 ¥1,500</span>
+          </div>
+          <div class="progress-track" role="progressbar" aria-label="本月预算使用率" aria-valuemin="0" aria-valuemax="100" aria-valuenow="17">
+            <span style="width: 17.6%"></span>
+          </div>
+          <p class="balance-note">已使用 17.6%，目前没有超支压力。</p>
+        </section>
+
+        <section class="today-grid" aria-label="今日概览">
+          <article class="metric-card">
+            <span class="metric-icon soft-blue" aria-hidden="true">今</span>
+            <div>
+              <p class="label" id="metric-1-label">今日支出</p>
+              <p class="metric-value">¥0</p>
+            </div>
+          </article>
+          <article class="metric-card">
+            <span class="metric-icon soft-peach" aria-hidden="true">宜</span>
+            <div>
+              <p class="label" id="metric-2-label">建议今日最高</p>
+              <p class="metric-value">¥0</p>
+            </div>
+          </article>
+        </section>
+
+        <button class="primary-action" id="quick-add" type="button">
+          <span class="plus" aria-hidden="true">+</span>
+          <span>记一笔</span>
+          <span class="action-hint">3–5 秒完成</span>
+        </button>
+
+        <section class="section-block" aria-labelledby="today-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow" id="today-date-label">—</p>
+              <h2 id="today-title">今日消费</h2>
+            </div>
+            <span class="section-total">¥32</span>
+          </div>
+          <div class="transaction-list">
+            <div id="transaction-list-content"></div>
+          </div>
+        </section>
+
+        <section id="ledger-view" class="ledger-view" aria-labelledby="ledger-title" hidden>
+          <div class="section-heading">
+            <div><p class="eyebrow">全部记录</p><h2 id="ledger-title">账本</h2></div>
+            <strong id="ledger-total" class="section-total">¥0</strong>
+          </div>
+          <div class="ledger-toolbar">
+            <label class="filter-label">查看范围<select id="ledger-filter"><option value="all">全部记录</option><option value="today">今天</option><option value="month">本月</option><option value="deleted">回收站</option></select></label>
+            <div class="export-actions"><button id="import-json" type="button">导入 JSON</button><button id="export-backup" type="button">导出备份</button><button id="export-json" type="button">导出 JSON</button><button id="export-csv" type="button">导出 CSV</button></div>
+          </div>
+          <div id="ledger-list" class="ledger-list"></div>
+        </section>
+
+        <section id="analysis-view" class="ledger-view analysis-view" aria-labelledby="analysis-title" hidden>
+          <div class="section-heading"><div><p class="eyebrow">月度概览</p><h2 id="analysis-title">消费分析</h2></div><span id="analysis-month" class="section-total"></span></div>
+          <div class="month-picker">
+            <button type="button" id="month-prev" aria-label="上一个月">‹</button>
+            <select id="month-select" aria-label="选择月份"></select>
+            <button type="button" id="month-next" aria-label="下一个月">›</button>
+          </div>
+          <div class="analysis-summary"><article><span class="label">本月支出</span><strong id="analysis-spent">¥0</strong></article><article><span class="label">日均支出</span><strong id="analysis-daily">¥0</strong></article><article><span class="label">剩余日预算</span><strong id="analysis-daily-budget">¥0</strong></article></div>
+          <div class="analysis-block"><div class="section-heading"><h3>分类分布</h3><span class="label">按金额</span></div><div id="category-breakdown"></div></div>
+          <section class="daily-report" aria-labelledby="daily-report-title">
+            <div class="section-heading"><div><p class="eyebrow" id="daily-report-eyebrow">今日复盘</p><h3 id="daily-report-title">今日财务报告</h3></div><span id="daily-rating" class="rating-badge">B</span></div>
+            <div class="report-grid"><div><span class="label" id="report-spent-label">今日支出</span><strong id="report-today-spent">¥0</strong></div><div><span class="label">剩余天数</span><strong id="report-days-left">0 天</strong></div><div><span class="label">当前日均</span><strong id="report-daily-average">¥0</strong></div><div><span class="label">剩余日预算</span><strong id="report-daily-budget">¥0</strong></div></div>
+            <p id="report-facts" class="report-facts">正在读取今日记录。</p>
+            <p id="daily-advice" class="report-advice"></p>
+          </section>
+          <section class="monthly-report" aria-labelledby="monthly-report-title">
+            <div class="section-heading"><div><p class="eyebrow">当前月份</p><h3 id="monthly-report-title">月度财务报告</h3></div><span id="monthly-report-month" class="section-total"></span></div>
+            <div class="report-grid monthly-summary-grid"><div><span class="label">月收入/预算</span><strong id="monthly-budget">¥0</strong></div><div><span class="label">总支出</span><strong id="monthly-spent">¥0</strong></div><div><span class="label">月末可留</span><strong id="monthly-remaining">¥0</strong></div><div><span class="label">储蓄率</span><strong id="monthly-savings-rate">0%</strong></div></div>
+            <div class="monthly-details"><p id="monthly-extremes" class="report-facts"></p><p id="monthly-impulse" class="report-facts"></p><p id="monthly-large" class="report-facts"></p></div>
+            <div id="monthly-answers" class="monthly-answers"></div>
+          </section>
+          <section class="review-section" aria-labelledby="review-title">
+            <div class="section-heading"><div><p class="eyebrow">≥ ¥100 且计划外</p><h3 id="review-title">大额消费审核</h3></div><span id="review-count" class="section-total">0 笔</span></div>
+            <div id="review-list" class="review-list"></div>
+          </section>
+          <section class="trend-section" aria-labelledby="trend-title">
+            <div class="section-heading"><div><p class="eyebrow">3 / 6 / 12 个月</p><h3 id="trend-title">长期趋势</h3></div><select id="trend-period" aria-label="趋势周期"><option value="3">近 3 个月</option><option value="6">近 6 个月</option><option value="12">近 12 个月</option></select></div>
+            <p id="trend-summary" class="report-advice"></p>
+            <div id="trend-bars" class="trend-bars"></div>
+            <div id="trend-table" class="trend-table"></div>
+          </section>
+        </section>
+
+        <section id="plan-view" class="ledger-view plan-view" aria-labelledby="plan-title" hidden>
+          <div class="section-heading"><div><p class="eyebrow">提前留余</p><h2 id="plan-title">未来计划</h2></div><span id="plan-total" class="section-total">¥0</span></div>
+          <form id="plan-form" class="plan-form"><input name="name" type="text" maxlength="30" placeholder="计划名称，例如：购买耳机" required /><input name="estimatedPrice" type="number" min="0.01" step="0.01" placeholder="预计金额" required /><input name="earliestPurchaseDate" type="date" required /><input name="latestPurchaseDate" type="date" required /><select name="necessity" aria-label="计划必要性"><option value="essential">必要</option><option value="useful" selected>有用</option><option value="nonessential">非必要</option></select><input name="currentPreparedFunds" type="number" min="0" step="0.01" placeholder="已准备资金" value="0" /><input name="reason" type="text" maxlength="60" placeholder="购买理由（可选）" /><button type="submit">添加计划</button></form>
+          <div id="plan-list" class="plan-list"></div>
+        </section>
+
+        <aside class="coach-note" aria-labelledby="coach-title">
+          <span class="coach-avatar" aria-hidden="true">余</span>
+          <div>
+            <p class="eyebrow">守财小提醒</p>
+            <h2 id="coach-title">今天的消费节奏很稳</h2>
+            <p>目前支出主要是必要餐饮和交通。留下来的钱，也是在给未来保留选择权。</p>
+          </div>
+        </aside>
+      </main>
+
+      <nav class="bottom-nav" aria-label="主要导航">
+        <a class="nav-item active" data-view="home" href="#top"><span aria-hidden="true">⌂</span><small>首页</small></a>
+        <a class="nav-item" data-view="ledger" href="#ledger-view"><span aria-hidden="true">▤</span><small>账本</small></a>
+        <a class="nav-item" data-view="analysis" href="#analysis-view"><span aria-hidden="true">◒</span><small>分析</small></a>
+        <a class="nav-item" data-view="plan" href="#plan-view"><span aria-hidden="true">◎</span><small>计划</small></a>
+      </nav>
+    </div>
+
+    <dialog id="add-dialog" class="add-dialog" aria-labelledby="dialog-title">
+      <form method="dialog" id="add-form" class="dialog-card">
+        <button class="dialog-close" value="cancel" aria-label="关闭">×</button>
+        <p class="eyebrow">快速记录</p>
+        <h2 id="dialog-title">记一笔</h2>
+        <p class="dialog-copy">记录一笔支出，数据会保存在当前设备的浏览器中。</p>
+        <div class="form-grid">
+          <input id="expense-id" name="id" type="hidden" />
+          <label>金额（元）<input id="expense-amount" name="amount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="例如 12" required /></label>
+          <label>用途<input id="expense-note" name="note" type="text" maxlength="30" placeholder="例如 午餐" required /></label>
+          <label>分类<select id="expense-category" name="category"><option value="food">餐饮</option><option value="transport">交通</option><option value="study">学习</option><option value="other">其他</option></select></label>
+          <details class="advanced-fields"><summary>消费判断（可选）</summary><div class="advanced-grid"><label>计划<select name="planned"><option value="planned">计划内</option><option value="unplanned">计划外</option></select></label><label>必要性<select name="necessity"><option value="essential">必要</option><option value="useful" selected>有用</option><option value="nonessential">非必要</option><option value="unnecessary">不必要</option></select></label><label>效用<select name="utility"><option value="low">低</option><option value="medium" selected>中</option><option value="high">高</option></select></label><label>冲动程度<input name="impulseScore" type="number" min="0" max="5" step="1" value="0" /></label></div></details>
+        </div>
+        <div class="dialog-actions"><button class="secondary-action" type="button" value="cancel">取消</button><button class="primary-action dialog-submit" type="submit">保存记录</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="settings-dialog" class="add-dialog" aria-labelledby="settings-title">
+      <form method="dialog" id="settings-form" class="dialog-card">
+        <button class="dialog-close" value="cancel" aria-label="关闭">×</button>
+        <p class="eyebrow">个人偏好</p>
+        <h2 id="settings-title">预算设置</h2>
+        <p class="dialog-copy">设置每月可用预算，首页和分析页会立即重新计算。</p>
+        <div class="form-grid"><label>每月预算（元）<input id="budget-input" name="budget" type="number" min="1" step="1" required /></label></div>
+        <div class="dialog-actions"><button class="secondary-action" type="button" value="cancel">取消</button><button class="primary-action dialog-submit" type="submit">保存设置</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="import-dialog" class="add-dialog" aria-labelledby="import-title">
+      <form method="dialog" id="import-form" class="dialog-card">
+        <button class="dialog-close" value="cancel" aria-label="关闭">×</button>
+        <p class="eyebrow">数据迁移</p>
+        <h2 id="import-title">导入数据</h2>
+        <p class="dialog-copy">选择导出的 JSON 文件或完整备份文件，选好后会先预览，确认无误才会写入。</p>
+        <div class="form-grid">
+          <label>JSON 文件<input id="import-file" type="file" accept=".json,application/json" required /></label>
+        </div>
+        <div id="import-preview" class="dialog-preview" style="display:none; margin-top:16px;"></div>
+        <div class="form-grid" id="import-options" style="display:none;">
+          <label>导入方式<select id="import-mode"><option value="merge">合并（保留现有记录，跳过重复）</option><option value="replace">替换全部（清空后导入）</option></select></label>
+        </div>
+        <div class="dialog-actions"><button class="secondary-action" type="button" value="cancel">取消</button><button class="primary-action dialog-submit" type="submit" id="import-confirm" disabled>确认导入</button></div>
+      </form>
+    </dialog>
+
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('sw.js')
+            .then(function (reg) { console.log('留余 SW 已注册:', reg.scope); })
+            .catch(function (err) { console.warn('SW 注册失败:', err); });
+        });
+      }
+    </script>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
