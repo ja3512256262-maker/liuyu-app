@@ -302,6 +302,19 @@ addDialog?.addEventListener('click', (event) => {
   if (event.target === addDialog) addDialog.close();
 });
 
+// 所有弹窗：点「取消」或点遮罩都能直接退出，不必填完表单
+document.querySelectorAll('dialog').forEach((dialog) => {
+  dialog.querySelectorAll('.dialog-close, .dialog-actions .secondary-action').forEach((button) => {
+    button.addEventListener('click', (event) => {
+      event.preventDefault();
+      dialog.close();
+    });
+  });
+  dialog.addEventListener('click', (event) => {
+    if (event.target === dialog) dialog.close();
+  });
+});
+
 const settingsDialog = document.querySelector('#settings-dialog');
 document.querySelector('#settings-button')?.addEventListener('click', () => {
   document.querySelector('#budget-input').value = centsToYuan(budgetCents);
