@@ -2,12 +2,12 @@
    策略：静态资源 network-first（超时回退缓存），图片/图标 cache-first。
    数据仍保存在浏览器 localStorage，SW 不触碰。
 */
-const CACHE_NAME = 'liuyu-v5';
+const CACHE_NAME = 'liuyu-v6';
 const APP_FILES = [
   './',
   './index.html',
-  './styles.css',
-  './app.js',
+  './styles.css?v=6',
+  './app.js?v=6',
   './finance.js',
   './reports.js',
   './monthly.js',
@@ -92,7 +92,7 @@ self.addEventListener('fetch', function (event) {
 
   // 页面 + JS/CSS/JSON：network-first，超时回退缓存
   event.respondWith(
-    networkWithTimeout(request, 3500).then(function (response) {
+    networkWithTimeout(request, 6000).then(function (response) {
       if (response && response.status === 200 && response.type === 'basic') {
         var copy = response.clone();
         caches.open(CACHE_NAME).then(function (cache) { cache.put(request, copy); });

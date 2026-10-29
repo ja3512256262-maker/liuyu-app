@@ -8,7 +8,7 @@
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=6" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="留余" />
@@ -186,6 +186,8 @@
         <h2 id="settings-title">预算设置</h2>
         <p class="dialog-copy">设置每月可用预算，首页和分析页会立即重新计算。</p>
         <div class="form-grid"><label>每月预算（元）<input id="budget-input" name="budget" type="number" min="1" step="1" required /></label></div>
+        <p class="app-version">当前版本 v6 · 2026-10-29</p>
+        <button type="button" id="clear-cache" class="cache-button">清除缓存并更新到最新版</button>
         <div class="dialog-actions"><button class="secondary-action" type="button" value="cancel">取消</button><button class="primary-action dialog-submit" type="submit">保存设置</button></div>
       </form>
     </dialog>
@@ -210,6 +212,15 @@
     <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
     <script>
+      // 内联兜底：即使脚本缓存是旧版，取消/关闭也能生效
+      document.addEventListener('click', function (event) {
+        var button = event.target.closest('.dialog-close, .dialog-actions .secondary-action');
+        if (!button) return;
+        var dialog = button.closest('dialog');
+        if (dialog) { event.preventDefault(); dialog.close(); }
+      });
+    </script>
+    <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function () {
           navigator.serviceWorker.register('sw.js')
@@ -218,6 +229,6 @@
         });
       }
     </script>
-    <script type="module" src="app.js"></script>
+    <script type="module" src="app.js?v=6"></script>
   </body>
 </html>
