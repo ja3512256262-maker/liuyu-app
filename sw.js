@@ -2,7 +2,7 @@
    策略：静态资源 network-first（超时回退缓存），图片/图标 cache-first。
    数据仍保存在浏览器 localStorage，SW 不触碰。
 */
-const CACHE_NAME = 'liuyu-v3';
+const CACHE_NAME = 'liuyu-v4';
 const APP_FILES = [
   './',
   './index.html',

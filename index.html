@@ -171,6 +171,7 @@
           <input id="expense-id" name="id" type="hidden" />
           <label>金额（元）<input id="expense-amount" name="amount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="例如 12" required /></label>
           <label>用途<input id="expense-note" name="note" type="text" maxlength="30" placeholder="例如 午餐" required /></label>
+          <label>日期<input id="expense-date" name="date" type="date" required /><small class="field-hint">忘记记的可以往前补，不能选未来</small></label>
           <label>分类<select id="expense-category" name="category"><option value="food">餐饮</option><option value="transport">交通</option><option value="study">学习</option><option value="other">其他</option></select></label>
           <details class="advanced-fields"><summary>消费判断（可选）</summary><div class="advanced-grid"><label>计划<select name="planned"><option value="planned">计划内</option><option value="unplanned">计划外</option></select></label><label>必要性<select name="necessity"><option value="essential">必要</option><option value="useful" selected>有用</option><option value="nonessential">非必要</option><option value="unnecessary">不必要</option></select></label><label>效用<select name="utility"><option value="low">低</option><option value="medium" selected>中</option><option value="high">高</option></select></label><label>冲动程度<input name="impulseScore" type="number" min="0" max="5" step="1" value="0" /></label></div></details>
         </div>
@@ -205,6 +206,8 @@
         <div class="dialog-actions"><button class="secondary-action" type="button" value="cancel">取消</button><button class="primary-action dialog-submit" type="submit" id="import-confirm" disabled>确认导入</button></div>
       </form>
     </dialog>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
     <script>
       if ('serviceWorker' in navigator) {

@@ -54,6 +54,12 @@ function monthContext(monthKeyValue = selectedMonth) {
   };
 }
 
+// 记一笔的默认日期：当前月用今天，查看历史月时用该月最后一天
+function defaultEntryDate() {
+  const ctx = monthContext();
+  return ctx.anchorKey;
+}
+
 function availableMonths() {
   const months = new Set([currentMonthKey]);
   readExpenses({ includeDeleted: true }).forEach((item) => {
@@ -257,6 +263,8 @@ function openEdit(id) {
   document.querySelector('#expense-id').value = item.id;
   document.querySelector('#expense-amount').value = centsToYuan(getAmountCents(item));
   document.querySelector('#expense-note').value = item.note;
+  document.querySelector('#expense-date').max = todayKey;
+  document.querySelector('#expense-date').value = item.date || todayKey;
   document.querySelector('#expense-category').value = item.category;
   addForm.elements.planned.value = item.planned;
   addForm.elements.necessity.value = item.necessity;
@@ -268,9 +276,22 @@ function openEdit(id) {
 
 function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char])); }
 
+let toastTimer = null;
+function showToast(message) {
+  const toast = document.querySelector('#toast');
+  if (!toast) return;
+  toast.textContent = message;
+  toast.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { toast.hidden = true; }, 2600);
+}
+
 quickAddButton?.addEventListener('click', () => {
   addForm?.reset();
   document.querySelector('#expense-id').value = '';
+  const dateInput = document.querySelector('#expense-date');
+  dateInput.max = todayKey;
+  dateInput.value = defaultEntryDate();
   document.querySelector('#dialog-title').textContent = '记一笔';
   if (typeof addDialog?.showModal === 'function') {
     addDialog.showModal();
@@ -305,9 +326,13 @@ addForm?.addEventListener('submit', (event) => {
   const expenses = readExpenses();
   const id = data.get('id');
   const original = id ? expenses.find((item) => item.id === id) : null;
-  const updated = { id: id || crypto.randomUUID?.() || String(Date.now()), amountCents: yuanToCents(amount), note: data.get('note').trim(), category: data.get('category'), date: original?.date || todayKey, time: now.toTimeString().slice(0, 5), createdAt: original?.createdAt || now.toISOString(), updatedAt: now.toISOString(), deletedAt: null, planned: data.get('planned') || 'planned', necessity: data.get('necessity') || 'useful', utility: data.get('utility') || 'medium', impulseScore: Math.max(0, Math.min(5, Number(data.get('impulseScore')) || 0)) };
+  const rawDate = String(data.get('date') || '');
+  const pickedDate = /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? (rawDate > todayKey ? todayKey : rawDate) : todayKey;
+  const updated = { id: id || crypto.randomUUID?.() || String(Date.now()), amountCents: yuanToCents(amount), note: data.get('note').trim(), category: data.get('category'), date: pickedDate, time: now.toTimeString().slice(0, 5), createdAt: original?.createdAt || now.toISOString(), updatedAt: now.toISOString(), deletedAt: null, planned: data.get('planned') || 'planned', necessity: data.get('necessity') || 'useful', utility: data.get('utility') || 'medium', impulseScore: Math.max(0, Math.min(5, Number(data.get('impulseScore')) || 0)) };
   const nextExpenses = id ? expenses.map((item) => item.id === id ? updated : item) : [updated, ...expenses];
   saveExpenses(nextExpenses);
+  selectedMonth = pickedDate.slice(0, 7);
+  showToast(id ? '记录已更新' : `已记入 ${pickedDate}${pickedDate === todayKey ? '' : '（补记）'}`);
   addForm.reset();
   addDialog.close();
   render();
