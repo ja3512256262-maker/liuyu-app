@@ -330,24 +330,6 @@ document.querySelector('#settings-form')?.addEventListener('submit', (event) => 
   render();
 });
 
-document.querySelector('#clear-cache')?.addEventListener('click', async () => {
-  const button = document.querySelector('#clear-cache');
-  if (button) { button.disabled = true; button.textContent = '正在清理…'; }
-  try {
-    if ('serviceWorker' in navigator) {
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      await Promise.all(registrations.map((registration) => registration.unregister()));
-    }
-    if (window.caches) {
-      const keys = await caches.keys();
-      await Promise.all(keys.map((key) => caches.delete(key)));
-    }
-  } catch (error) {
-    console.warn('清理缓存失败', error);
-  }
-  location.reload();
-});
-
 addForm?.addEventListener('submit', (event) => {
   event.preventDefault();
   const data = new FormData(addForm);
