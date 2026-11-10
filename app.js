@@ -4,6 +4,7 @@ import { calculateMonthlyReport } from './monthly.js';
 import { calculateRecommendedReserve, normalizePlan, planStatuses } from './plans.js';
 import { assessLargeExpense } from './review.js';
 import { calculateTrend } from './trends.js';
+import { aiModels, buildAiPayload, buildMessages, getAiKey, getAiModel, readAiReports, removeAiReport, requestDeepSeek, saveAiReport, setAiKey, setAiModel, testDeepSeekKey } from './ai.js';
 
 const quickAddButton = document.querySelector('#quick-add');
 const addDialog = document.querySelector('#add-dialog');
@@ -148,6 +149,7 @@ function render() {
   renderAnalysis();
   renderDailyReport(snapshot);
   renderMonthlyReport();
+  renderAI();
   renderLargeExpenseReview();
   renderTrends();
   renderPlans();
@@ -213,8 +215,101 @@ function renderMonthlyReport() {
   document.querySelector('#monthly-answers').innerHTML = report.answers.map(([question, answer]) => `<div class="answer-row"><strong>${question}</strong><span>${escapeHtml(answer)}</span></div>`).join('');
 }
 
-function renderLargeExpenseReview() {
-  const currentMonth = readExpenses().filter((item) => item.date?.slice(0, 7) === selectedMonth);
+/* ---------- DeepSeek AI 分析 ---------- */
+let aiBusy = false;
+const aiItemsStorageKey = 'liuyu-ai-include-items-v1';
+
+function currentAiPayload() {
+  const ctx = monthContext();
+  const snapshot = getBudgetSnapshot(readExpenses(), ctx);
+  const includeItems = document.querySelector('#ai-include-items')?.checked !== false;
+  return {
+    ctx,
+    snapshot,
+    payload: buildAiPayload({ ctx, budgetCents, snapshot, expenses: snapshot.monthExpenses, categoryNames, includeItems }),
+  };
+}
+
+function renderAI({ keepOutput = false } = {}) {
+  const runButton = document.querySelector('#ai-run');
+  if (!runButton) return;
+  const ctx = monthContext();
+  const key = getAiKey();
+  const report = readAiReports()[ctx.monthKey];
+  document.querySelector('#ai-hint').textContent = key
+    ? '只在你点按钮时把当月数据发到 DeepSeek（api.deepseek.com），用于生成分析。'
+    : '还没有配置 DeepSeek API Key，去右上角 ⚙ 设置里填。';
+  document.querySelector('#ai-status').textContent = report ? `上次分析 ${new Date(report.createdAt).toLocaleDateString('zh-CN')}` : '';
+  runButton.disabled = aiBusy || !key;
+  document.querySelector('#ai-clear').disabled = !report;
+  try {
+    document.querySelector('#ai-payload').textContent = JSON.stringify(currentAiPayload().payload, null, 2);
+  } catch {
+    document.querySelector('#ai-payload').textContent = '暂时无法生成预览';
+  }
+  const output = document.querySelector('#ai-output');
+  if (keepOutput) return;
+  if (report) {
+    output.hidden = false;
+    output.classList.remove('error');
+    output.textContent = report.text;
+  } else {
+    output.hidden = true;
+    output.classList.remove('error');
+    output.textContent = '';
+  }
+}
+
+function initAiItemsCheckbox() {
+  const checkbox = document.querySelector('#ai-include-items');
+  if (!checkbox) return;
+  const saved = localStorage.getItem(aiItemsStorageKey);
+  checkbox.checked = saved === null ? true : saved === '1';
+}
+initAiItemsCheckbox();
+
+document.querySelector('#ai-include-items')?.addEventListener('change', (event) => {
+  localStorage.setItem(aiItemsStorageKey, event.target.checked ? '1' : '0');
+  renderAI({ keepOutput: true });
+});
+
+document.querySelector('#ai-run')?.addEventListener('click', async (event) => {
+  const button = event.currentTarget;
+  const key = getAiKey();
+  if (!key) { showToast('先去设置里填 DeepSeek API Key'); return; }
+  const output = document.querySelector('#ai-output');
+  if (aiBusy) return;
+  aiBusy = true;
+  button.disabled = true;
+  button.textContent = '分析中…';
+  output.hidden = false;
+  output.classList.remove('error');
+  output.textContent = '正在让 DeepSeek 分析，通常 5–20 秒…';
+  try {
+    const { ctx, snapshot, payload } = currentAiPayload();
+    if (!snapshot.monthExpenses.length) throw new Error('这个月还没有记录，没什么可分析的。');
+    const result = await requestDeepSeek({ key, model: getAiModel(), messages: buildMessages(payload) });
+    saveAiReport(ctx.monthKey, { text: result.text, createdAt: new Date().toISOString(), model: getAiModel() });
+    output.textContent = result.text;
+    document.querySelector('#ai-status').textContent = `上次分析 刚刚`;
+  } catch (error) {
+    output.classList.add('error');
+    output.textContent = `分析失败：${error.message}`;
+  } finally {
+    aiBusy = false;
+    button.disabled = false;
+    button.textContent = '让 AI 分析这个月';
+    const report = readAiReports()[monthContext().monthKey];
+    document.querySelector('#ai-clear').disabled = !report;
+  }
+});
+
+document.querySelector('#ai-clear')?.addEventListener('click', () => {
+  removeAiReport(monthContext().monthKey);
+  renderAI();
+});
+
+function renderLargeExpenseReview() {  const currentMonth = readExpenses().filter((item) => item.date?.slice(0, 7) === selectedMonth);
   const candidates = currentMonth.filter((item) => item.planned === 'unplanned' && item.amountCents >= 10000);
   const necessityLabels = { essential: '必要', useful: '有用', nonessential: '非必要', unnecessary: '不必要' };
   document.querySelector('#review-count').textContent = `${candidates.length} 笔`;
@@ -318,14 +413,38 @@ document.querySelectorAll('dialog').forEach((dialog) => {
 const settingsDialog = document.querySelector('#settings-dialog');
 document.querySelector('#settings-button')?.addEventListener('click', () => {
   document.querySelector('#budget-input').value = centsToYuan(budgetCents);
+  document.querySelector('#ai-key-input').value = getAiKey();
+  const modelSelect = document.querySelector('#ai-model-select');
+  modelSelect.innerHTML = aiModels.map((item) => `<option value="${item.value}" ${item.value === getAiModel() ? 'selected' : ''}>${item.label}</option>`).join('');
+  document.querySelector('#ai-test-result').textContent = '';
   settingsDialog.showModal();
 });
+
+document.querySelector('#ai-test')?.addEventListener('click', async (event) => {
+  const button = event.currentTarget;
+  const result = document.querySelector('#ai-test-result');
+  const key = document.querySelector('#ai-key-input').value.trim();
+  if (!key) { result.textContent = '先填 API Key'; return; }
+  button.disabled = true;
+  result.textContent = '正在测试…';
+  try {
+    const models = await testDeepSeekKey(key);
+    result.textContent = models.length ? `连接正常，可用模型：${models.join('、')}` : '连接正常（Key 有效）';
+  } catch (error) {
+    result.textContent = `测试失败：${error.message}`;
+  } finally {
+    button.disabled = false;
+  }
+});
+
 document.querySelector('#settings-form')?.addEventListener('submit', (event) => {
   event.preventDefault();
   const nextBudget = Number(new FormData(event.currentTarget).get('budget'));
   if (!Number.isFinite(nextBudget) || nextBudget <= 0) return;
   budgetCents = yuanToCents(nextBudget);
   localStorage.setItem('liuyu-budget-cents-v1', String(budgetCents));
+  setAiKey(document.querySelector('#ai-key-input').value.trim());
+  setAiModel(document.querySelector('#ai-model-select').value);
   settingsDialog.close();
   render();
 });

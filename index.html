@@ -8,7 +8,7 @@
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=7" />
+    <link rel="stylesheet" href="styles.css?v=8" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="留余" />
@@ -125,6 +125,17 @@
             <div class="monthly-details"><p id="monthly-extremes" class="report-facts"></p><p id="monthly-impulse" class="report-facts"></p><p id="monthly-large" class="report-facts"></p></div>
             <div id="monthly-answers" class="monthly-answers"></div>
           </section>
+          <section class="ai-section" aria-labelledby="ai-title">
+            <div class="section-heading"><div><p class="eyebrow">DeepSeek</p><h3 id="ai-title">AI 财务分析</h3></div><span id="ai-status" class="section-total"></span></div>
+            <p id="ai-hint" class="report-facts">还没有配置 DeepSeek API Key，去右上角 ⚙ 设置里填。</p>
+            <label class="ai-check"><input type="checkbox" id="ai-include-items" checked /> 发送逐笔明细（包含用途名称）</label>
+            <div class="ai-actions">
+              <button type="button" id="ai-run" class="primary-action dialog-submit">让 AI 分析这个月</button>
+              <button type="button" id="ai-clear" class="secondary-action">清除本月分析</button>
+            </div>
+            <details class="ai-payload"><summary>查看将发送给 DeepSeek 的数据</summary><pre id="ai-payload"></pre></details>
+            <div id="ai-output" class="ai-output" hidden></div>
+          </section>
           <section class="review-section" aria-labelledby="review-title">
             <div class="section-heading"><div><p class="eyebrow">≥ ¥100 且计划外</p><h3 id="review-title">大额消费审核</h3></div><span id="review-count" class="section-total">0 笔</span></div>
             <div id="review-list" class="review-list"></div>
@@ -185,8 +196,15 @@
         <p class="eyebrow">个人偏好</p>
         <h2 id="settings-title">预算设置</h2>
         <p class="dialog-copy">设置每月可用预算，首页和分析页会立即重新计算。</p>
-        <div class="form-grid"><label>每月预算（元）<input id="budget-input" name="budget" type="number" min="1" step="1" required /></label></div>
-        <p class="app-version">当前版本 v7 · 2026-10-29</p>
+        <div class="form-grid">
+          <label>每月预算（元）<input id="budget-input" name="budget" type="number" min="1" step="1" required /></label>
+          <label>DeepSeek API Key<input id="ai-key-input" type="password" placeholder="sk-...（留空则关闭 AI）" autocomplete="off" spellcheck="false" /></label>
+          <label>模型<select id="ai-model-select"></select></label>
+        </div>
+        <p class="ai-privacy">Key 只保存在这台设备的浏览器里，不会写进代码，也不会发送给 DeepSeek 以外的任何服务。</p>
+        <button type="button" id="ai-test" class="cache-button">测试 DeepSeek 连接</button>
+        <p id="ai-test-result" class="app-version"></p>
+        <p class="app-version">当前版本 v8 · 2026-11-10</p>
         <button type="button" id="clear-cache" class="cache-button">清除缓存并更新到最新版</button>
         <div class="dialog-actions"><button class="secondary-action" type="button" value="cancel">取消</button><button class="primary-action dialog-submit" type="submit">保存设置</button></div>
       </form>
@@ -244,6 +262,6 @@
         });
       }
     </script>
-    <script type="module" src="app.js?v=7"></script>
+    <script type="module" src="app.js?v=8"></script>
   </body>
 </html>
